@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Basic Chat</title>
+   </head>
+   
+   <script src = "/socket.io/socket.io.js"></script>
+   <script>
+      var socket = io({
+  query: {
+    token: Math.random()*1000
+  }});
+      function setUsername() {
+         socket.emit('setUsername', document.getElementById('name').value);
+      };
+      var user;
+      var connectedUsers = [];
+      socket.on('userExists', function(data) {
+         document.getElementById('error-container').innerHTML = data;
+      });
+      socket.on('userSet', function(data) {
+         user = data.username;
+         document.body.innerHTML = '<input type = "text" id = "message">\
+         <button type = "button" name = "button" onclick = "sendMessage()">Send</button>\
+         <div id = "message-container"></div>';
+      });
+      socket.on("connected",function(data){
+        var username = data.username;
+        alert(username);
+        if(connectedUsers.indexOf(username)==-1){
+            connectedUsers.push(username);
+        }
+        updateConnectedUsers();
+      });
+      socket.on("disconnected",function(data){
+        var username = data.username;
+        var userIdx = connectedUsers.indexOf(username);
+        connectedUsers.splice(userIdx,1);
+        alert(username);
+        updateConnectedUsers();
+     });
+
+     function updateConnectedUsers(){
+        var htmlStr="";
+        for(var i=0; i<connectedUsers.length;i++){
+            htmlStr+="<li>"+connectedUsers[i]+"</li>";
+        }
+        $("#users").append(htmlStr);
+     }
+
+      function sendMessage() {
+         var msg = document.getElementById('message').value;
+         if(msg) {
+            socket.emit('msg', {message: msg, user: user});
+         }
+      }
+      socket.on('newmsg', function(data) {
+         if(user) {
+            document.getElementById('message-container').innerHTML += '<div><b>' + 
+               data.user + '</b>: ' + data.message + '</div>'
+         }
+      })
+   </script>
+   
+   <body>
+      <div id = "error-container"></div>
+      <input id = "name" type = "text" name = "name" value = "" 
+         placeholder = "Enter your name!">
+      <button type = "button" name = "button" onclick = "setUsername()">
+         Let me chat!
+      </button>
+
+      <div style="float:right" ><ul id="users">
+
+      </ul></div>
+   </body>
+</html>
