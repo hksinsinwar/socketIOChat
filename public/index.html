@@ -5,24 +5,33 @@
    </head>
    
    <script src = "/socket.io/socket.io.js"></script>
+   <script src="https://code.jquery.com/jquery-3.4.0.js" integrity="sha256-DYZMCC8HTC+QDr5QNaIcfR7VSPtcISykd+6eSmBW5qo="  crossorigin="anonymous"></script>
+   <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
    <script>
-      var socket = io({
-  query: {
-    token: Math.random()*1000
-  }});
-      function setUsername() {
-         socket.emit('setUsername', document.getElementById('name').value);
-      };
+       $(document).ready(function(){
+        var socket = io({
+            transports: ['websocket'],
+            query: {
+                token: Math.random()*1000
+            }
+        });
+     
+
       var user;
       var connectedUsers = [];
       socket.on('userExists', function(data) {
-         document.getElementById('error-container').innerHTML = data;
+         $("#usertaken").html(data);
+         $("#userError").toggleClass("hide");
       });
       socket.on('userSet', function(data) {
          user = data.username;
-         document.body.innerHTML = '<input type = "text" id = "message">\
-         <button type = "button" name = "button" onclick = "sendMessage()">Send</button>\
-         <div id = "message-container"></div>';
+         $("#messageBlock").removeClass("hide");
+         $("#messageContainer").removeClass("hide"); 
+         $("#userBlock").addClass("hide");  
       });
       socket.on("connected",function(data){
         var username = data.username;
@@ -48,30 +57,48 @@
         $("#users").append(htmlStr);
      }
 
-      function sendMessage() {
+        $("#sendMsg").click( function sendMessage() {
          var msg = document.getElementById('message').value;
          if(msg) {
             socket.emit('msg', {message: msg, user: user});
          }
-      }
+      });
       socket.on('newmsg', function(data) {
          if(user) {
-            document.getElementById('message-container').innerHTML += '<div><b>' + 
-               data.user + '</b>: ' + data.message + '</div>'
+            $("#messageContainer").append('<div><b>'+data.user + '</b>: ' + data.message + '</div>')
          }
       })
+      $("#abc").click(function(){
+        socket.emit('setUsername', document.getElementById('name').value);
+      });
+
+       });
+    
    </script>
    
    <body>
-      <div id = "error-container"></div>
-      <input id = "name" type = "text" name = "name" value = "" 
-         placeholder = "Enter your name!">
-      <button type = "button" name = "button" onclick = "setUsername()">
-         Let me chat!
-      </button>
+    <div class="container">
+        <div class="col-md-9 col-sm-9 col-lg-9">
+            <div class="row" id="userBlock">
+                <input class="text" placeholder="Enter your username" id="name" name="name">
+                <button class="btn" id="abc"> Let's chat</button>
+                <p class="error hide" id="userError"><span id="usertaken"></span> Name already taken</p>
+            </div>
+            <div class="row hide" id="messageBlock" >
+                <input class="text" id="message" placeholder="Send Message">
+                <button id="sendMsg">Send</button>
+            </div>
+            <div class="messageContainer hide" id="messageContainer">
+              
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-3 col-lg-3">
+            <div class="row">
+                <ul id="users">
 
-      <div style="float:right" ><ul id="users">
-
-      </ul></div>
+                </ul>
+            </div>
+        </div>
+      </div>
    </body>
 </html>

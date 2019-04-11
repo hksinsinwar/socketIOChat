@@ -32,7 +32,7 @@ io.on('connection', function(socket) {
    console.log("Socket properties", Object.keys(socket));
    
    socket.on('setUsername', function(data) {
-    
+        console.log("data--> ", data);
       if(users.indexOf(data) > -1) {
          socket.emit('userExists', data + ' username is taken! Try some other username.');
       } else {
